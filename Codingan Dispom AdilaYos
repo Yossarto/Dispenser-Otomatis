@@ -1,0 +1,75 @@
+\#include <ESP8266WiFi.h>
+#include <Servo.h>
+
+// Pin definitions
+#define IR_SENSOR_1 5
+#define IR_SENSOR_2 4
+#define SERVO_1_PIN 14
+#define SERVO_2_PIN 12
+
+// Servo objects
+Servo servo1;
+Servo servo2;
+
+// Servo angles
+int angle1 = 0; // Initial angle for Servo 1
+int angle2 = 0; // Initial angle for Servo 2
+
+// Variables to track servo state
+bool servo1Active = false;
+bool servo2Active = false;
+
+void setup() {
+  // Initialize serial communication
+  Serial.begin(115200);
+
+  // Attach servos to their respective pins
+  servo1.attach(SERVO_1_PIN);
+  servo2.attach(SERVO_2_PIN);
+
+  // Set initial position for servos
+  servo1.write(angle1);
+  servo2.write(angle2);
+
+  // Set IR sensor pins as input
+  pinMode(IR_SENSOR_1, INPUT);
+  pinMode(IR_SENSOR_2, INPUT);
+}
+
+void loop() {
+  // Read the state of the IR sensors
+  int ir1State = digitalRead(IR_SENSOR_1);
+  int ir2State = digitalRead(IR_SENSOR_2);
+
+  // Handle Servo 1
+  if (ir1State == LOW) { // Object detected by IR Sensor 1
+    if (!servo1Active) {
+      Serial.println("Object detected by IR Sensor 1");
+      moveServo(servo1, 150); // Move Servo 1 to 150 degrees
+      servo1Active = true; // Mark Servo 1 as active
+    }
+  } else if (servo1Active) { // No object detected, and Servo 1 was active
+    moveServo(servo1, 0); // Move Servo 1 back to 0 degrees
+    servo1Active = false; // Mark Servo 1 as inactive
+  }
+
+  // Handle Servo 2
+  if (ir2State == LOW) { // Object detected by IR Sensor 2
+    if (!servo2Active) {
+      Serial.println("Object detected by IR Sensor 2");
+      moveServo(servo2, 150); // Move Servo 2 to 250 degrees
+      servo2Active = true; // Mark Servo 2 as active
+    }
+  } else if (servo2Active) { // No object detected, and Servo 2 was active
+    moveServo(servo2, 0); // Move Servo 2 back to 0 degrees
+    servo2Active = false; // Mark Servo 2 as inactive
+  }
+
+  delay(100); // Small delay to avoid excessive looping
+}
+
+// Function to move a servo to a specific angle
+void moveServo(Servo &servo, int angle) {
+  servo.write(angle);
+  delay(15); // Small delay to allow the servo to reach the position
+}
